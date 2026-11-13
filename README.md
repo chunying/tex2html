@@ -23,11 +23,25 @@ Standalone executables that need no Python are built by GitHub Actions
 | Linux x86-64                | `tex2html-linux-x86_64`       |
 | Linux ARM64 (aarch64)       | `tex2html-linux-aarch64`      |
 | Windows x86-64              | `tex2html-windows-x86_64.exe` |
+| Windows ARM64               | `tex2html-windows-aarch64.exe`|
+| macOS Apple Silicon (arm64) | `tex2html-macos-aarch64`      |
 
-The Linux binaries are built on manylinux_2_28. They run on any distribution
-with glibc 2.28 or newer, such as Debian 10+, Ubuntu 20.04+ and RHEL/Rocky/Alma
-8+. The ARM64 build also covers Raspberry Pi OS (64-bit) and ARM cloud servers
-like AWS Graviton.
+- **Linux:** built on manylinux_2_28, so the binaries run on any distribution
+  with glibc 2.28 or newer, such as Debian 10+, Ubuntu 20.04+ and
+  RHEL/Rocky/Alma 8+. The ARM64 build also covers Raspberry Pi OS (64-bit) and
+  ARM cloud servers like AWS Graviton.
+- **Windows ARM64:** for Windows 11 on ARM devices, such as Snapdragon laptops
+  and Surface Pro.
+- **macOS:** needs macOS 11 (Big Sur) or newer on an Apple Silicon Mac.
+
+The macOS and Windows binaries are not code-signed, so the system may warn
+when you first run one:
+
+- **macOS** blocks downloaded unsigned programs. Clear the download flag once
+  with `xattr -d com.apple.quarantine tex2html-macos-aarch64`, or right-click
+  it in Finder and choose Open.
+- **Windows SmartScreen** may show "Windows protected your PC". Choose
+  "More info", then "Run anyway".
 
 Builds run only when a tag is pushed or created, or when started by hand from
 the Actions tab ("Run workflow").
@@ -41,6 +55,7 @@ The binaries take the same arguments as the script:
 
 ```sh
 ./tex2html-linux-x86_64 paper.tex paper.html
+./tex2html-macos-aarch64 paper.tex paper.html
 tex2html-windows-x86_64.exe paper.tex paper.md
 ```
 
