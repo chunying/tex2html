@@ -1,4 +1,4 @@
-# tex2html
+# My mini tex2html tool
 
 Convert a LaTeX document, or a bare snippet of LaTeX, into a standalone HTML
 page or a GitHub-flavored Markdown file.
