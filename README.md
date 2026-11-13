@@ -29,7 +29,10 @@ with glibc 2.28 or newer, such as Debian 10+, Ubuntu 20.04+ and RHEL/Rocky/Alma
 8+. The ARM64 build also covers Raspberry Pi OS (64-bit) and ARM cloud servers
 like AWS Graviton.
 
-- Tagged versions (`v*`) attach them to a
+Builds run only when a tag is pushed or created, or when started by hand from
+the Actions tab ("Run workflow").
+
+- Tags starting with `v` (e.g. `v1.0.0`) attach the binaries to a
   [GitHub release](https://github.com/chunying/tex2html/releases), along with
   `SHA256SUMS.txt`.
 - Every other build keeps them as workflow artifacts on the Actions run page.

@@ -1,14 +1,13 @@
 name: Build binaries
 
 # Builds standalone tex2html executables with Nuitka (same as `make build`).
-# - every push / pull request: build and test; binaries are kept as workflow artifacts
-# - pushing a tag like v1.2.0: also publishes them on a GitHub release
+# Runs only when started by hand (Actions tab -> "Run workflow") or when a tag
+# is pushed or created. Binaries are kept as workflow artifacts; for a tag like
+# v1.2.0 they are also published on a GitHub release.
 
 on:
   push:
-    branches: [main]
     tags: ['v*']
-  pull_request:
   workflow_dispatch:
 
 permissions:
