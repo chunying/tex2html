@@ -13,6 +13,41 @@ itself and translates the commands it knows.
 - To view math in the HTML output, a browser with internet access (MathJax is
   loaded from a CDN)
 
+### Prebuilt binaries
+
+Standalone executables that need no Python are built by GitHub Actions
+(`.github/workflows/build.yml`):
+
+| Platform                    | File                          |
+| --------------------------- | ----------------------------- |
+| Linux x86-64                | `tex2html-linux-x86_64`       |
+| Linux ARM64 (aarch64)       | `tex2html-linux-aarch64`      |
+| Windows x86-64              | `tex2html-windows-x86_64.exe` |
+
+The Linux binaries are built on manylinux_2_28. They run on any distribution
+with glibc 2.28 or newer, such as Debian 10+, Ubuntu 20.04+ and RHEL/Rocky/Alma
+8+. The ARM64 build also covers Raspberry Pi OS (64-bit) and ARM cloud servers
+like AWS Graviton.
+
+- Tagged versions (`v*`) attach them to a
+  [GitHub release](https://github.com/chunying/tex2html/releases), along with
+  `SHA256SUMS.txt`.
+- Every other build keeps them as workflow artifacts on the Actions run page.
+
+The binaries take the same arguments as the script:
+
+```sh
+./tex2html-linux-x86_64 paper.tex paper.html
+tex2html-windows-x86_64.exe paper.tex paper.md
+```
+
+### Building a binary yourself
+
+```sh
+pip install nuitka zstandard   # Linux also needs: sudo apt install patchelf
+make build                     # writes ./bin/tex2html
+```
+
 ## Usage
 
 ```sh

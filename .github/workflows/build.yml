@@ -1,0 +1,141 @@
+name: Build binaries
+
+# Builds standalone tex2html executables with Nuitka (same as `make build`).
+# - every push / pull request: build and test; binaries are kept as workflow artifacts
+# - pushing a tag like v1.2.0: also publishes them on a GitHub release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Build (linux-${{ matrix.arch }}, manylinux_2_28)
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm   # native ARM64 runner, no emulation
+    runs-on: ${{ matrix.runner }}
+    # manylinux_2_28 (AlmaLinux 8, glibc 2.28): the binary runs on any distro
+    # with glibc 2.28 or newer (Debian 10+, Ubuntu 20.04+, RHEL/Rocky/Alma 8+).
+    # This is also the oldest glibc that GitHub's own actions support in a container.
+    container: quay.io/pypa/manylinux_2_28_${{ matrix.arch }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nuitka
+        run: |
+          # manylinux ships several CPythons under /opt/python; patchelf and gcc are preinstalled.
+          # Its Pythons have no shared libpython, so unpack the static one Nuitka links against.
+          tar -C /opt/_internal -xf /opt/_internal/static-libs-for-embedding-only.tar.xz
+          /opt/python/cp312-cp312/bin/python -m venv /opt/venv
+          /opt/venv/bin/pip install --upgrade pip nuitka zstandard
+          patchelf --version
+          gcc --version | head -1
+
+      - name: Build onefile executable
+        run: >
+          /opt/venv/bin/python -m nuitka
+          --onefile
+          --assume-yes-for-downloads
+          --output-dir=dist
+          --output-filename=tex2html
+          tex2html.py
+
+      - name: Smoke test
+        run: bash .github/scripts/smoke-test.sh dist/tex2html
+
+      - name: Check required glibc version
+        run: |
+          # scan the onefile launcher and everything packed into it (left in dist/*.dist)
+          required=$(find dist -type f \( -perm -u+x -o -name '*.so*' \) -print0 \
+            | xargs -0 objdump -T 2>/dev/null | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)
+          echo "binary requires $required"
+          [ -n "$required" ]
+          [ "$(printf '%s\n' "$required" GLIBC_2.28 | sort -V | tail -1)" = GLIBC_2.28 ]
+
+      - name: Rename for distribution
+        run: |
+          mkdir -p upload
+          cp dist/tex2html upload/tex2html-linux-${{ matrix.arch }}
+          chmod +x upload/tex2html-linux-${{ matrix.arch }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tex2html-linux-${{ matrix.arch }}
+          path: upload/*
+          if-no-files-found: error
+
+  windows:
+    name: Build (windows-x86_64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Nuitka
+        run: python -m pip install --upgrade pip nuitka zstandard
+
+      - name: Build onefile executable
+        run: >
+          python -m nuitka
+          --onefile
+          --assume-yes-for-downloads
+          --output-dir=dist
+          --output-filename=tex2html.exe
+          tex2html.py
+
+      - name: Smoke test
+        run: bash .github/scripts/smoke-test.sh dist/tex2html.exe
+
+      - name: Rename for distribution
+        run: |
+          mkdir -p upload
+          cp dist/tex2html.exe upload/tex2html-windows-x86_64.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tex2html-windows-x86_64
+          path: upload/*
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: upload
+          merge-multiple: true
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd upload
+          sha256sum tex2html-* > SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" tex2html-* SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes
