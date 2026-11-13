@@ -33,7 +33,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Nuitka
         run: |
@@ -72,7 +72,7 @@ jobs:
           cp dist/tex2html upload/tex2html-linux-${{ matrix.arch }}
           chmod +x upload/tex2html-linux-${{ matrix.arch }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tex2html-linux-${{ matrix.arch }}
           path: upload/*
@@ -95,9 +95,9 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
           architecture: ${{ matrix.python-arch }}
@@ -124,7 +124,7 @@ jobs:
           mkdir -p upload
           cp dist/tex2html.exe upload/tex2html-windows-${{ matrix.arch }}.exe
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tex2html-windows-${{ matrix.arch }}
           path: upload/*
@@ -140,7 +140,7 @@ jobs:
       PYTHON_PKG: https://www.python.org/ftp/python/3.12.10/python-3.12.10-macos11.pkg
       PYTHON: /Library/Frameworks/Python.framework/Versions/3.12/bin/python3.12
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install python.org Python
         run: |
@@ -179,7 +179,7 @@ jobs:
           cp dist/tex2html upload/tex2html-macos-aarch64
           chmod +x upload/tex2html-macos-aarch64
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tex2html-macos-aarch64
           path: upload/*
@@ -193,7 +193,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: upload
           merge-multiple: true
